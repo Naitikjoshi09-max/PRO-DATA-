@@ -368,7 +368,7 @@ if numeric_cols:
         with c3:
             dist_col = st.selectbox("Select Variable for Histogram:", options=numeric_cols, key="p_dist")
             fig_hist = px.histogram(
-                filtered_df, x=dist_col, nbins=30, marging="rug" if len(filtered_df) < 1000 else None,
+                filtered_df, x=dist_col, nbins=30, marginal="rug" if len(filtered_df) < 1000 else None,
                 color_discrete_sequence=["#818cf8"], title=f"Distribution Frequency of {dist_col}"
             )
             fig_hist.update_layout(PLOTLY_THEME["layout"])
