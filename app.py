@@ -1,18 +1,12 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
 import io
 
-# Optional imports with fallbacks to prevent cloud deployment crashes
-try:
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    HAS_PLOTTING_LIBS = True
-except ImportError:
-    HAS_PLOTTING_LIBS = False
-
 # ---------------------------------------------------------
-# Page Configuration & Styling
+# Page Configuration
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Universal Analytics Studio Pro",
@@ -21,205 +15,414 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Modern Custom CSS
+# ---------------------------------------------------------
+# Ultra-Modern CSS & Glassmorphic Styling
+# ---------------------------------------------------------
 st.markdown("""
 <style>
-    .stApp { background-color: #f8fafc; }
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #4f46e5, #06b6d4, #ec4899);
+    /* Dark Gradient Base */
+    .stApp {
+        background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
+        color: #f8fafc;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    
+    /* Branding Header */
+    .brand-logo-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+    .brand-logo-icon {
+        width: 54px;
+        height: 54px;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+    }
+    .brand-logo-text {
+        font-size: 2.3rem;
+        font-weight: 900;
+        letter-spacing: -1px;
+        background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
     }
-    .metric-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        border-left: 5px solid #6366f1;
+    
+    /* Glassmorphic Cards */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        margin-bottom: 20px;
     }
-    .metric-card-2 { border-left-color: #ec4899; }
-    .metric-card-3 { border-left-color: #10b981; }
-    .metric-card-4 { border-left-color: #f59e0b; }
-    .metric-label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
-    .metric-val { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-top: 4px; }
+    
+    /* Interactive Metric KPI Cards with Hover Animation */
+    .kpi-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 20px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(168, 85, 247, 0.4);
+        box-shadow: 0 12px 25px rgba(168, 85, 247, 0.2);
+    }
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 4px; height: 100%;
+        background: linear-gradient(180deg, #6366f1, #a855f7);
+    }
+    .kpi-card-2::before { background: linear-gradient(180deg, #ec4899, #f43f5e); }
+    .kpi-card-3::before { background: linear-gradient(180deg, #10b981, #14b8a6); }
+    .kpi-card-4::before { background: linear-gradient(180deg, #f59e0b, #eab308); }
+    
+    .kpi-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .kpi-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #f8fafc;
+        margin-top: 6px;
+    }
+    
+    /* Smart Insight Box */
+    .insight-box {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
+        border: 1px solid rgba(168, 85, 247, 0.2);
+        border-radius: 16px;
+        padding: 18px 24px;
+        margin-bottom: 24px;
+    }
+    
+    /* Title Stylings */
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 900;
+        background: linear-gradient(90deg, #a78bfa, #38bdf8, #f472b6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Password Protection System
+# Security Lock Screen (Password Authentication)
 # ---------------------------------------------------------
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
-    st.title("🔒 License Key Verification")
-    st.markdown("Please enter your active customer license key to unlock the studio.")
+    col1, col2, col3 = st.columns([1, 2, 1])
     
-    user_key = st.text_input("License Key:", type="password")
-    if st.button("Unlock Application", type="primary"):
-        if user_key.strip() in ["VIP-2026-PASS", "DEMO123", "ADMIN"]:
-            st.session_state["authenticated"] = True
-            st.rerun()
-        else:
-            st.error("Invalid key. Please check your purchase receipt.")
+    with col2:
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        
+        # Logo Header
+        st.markdown("""
+        <div class="brand-logo-container">
+            <div class="brand-logo-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+            </div>
+            <div class="brand-logo-text">UNIVERSAL STUDIO</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Glassmorphism Lock Card
+        st.markdown("""
+        <div class="glass-card" style="text-align: center;">
+            <h3 style="margin-bottom: 8px; font-weight: 800;">🔒 Enterprise License Lock</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem;">Enter your confidential password key to unlock the interactive studio.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        user_key = st.text_input("", type="password", placeholder="Enter license password...", key="pwd_field")
+        
+        if st.button("🚀 Unlock Interactive Studio", type="primary", use_container_width=True):
+            if user_key.strip() == "UNIVERSAL$12346":
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("❌ Invalid License Key. Access Denied.")
+                
+        st.markdown("<br><br>", unsafe_allow_html=True)
     st.stop()
 
 # ---------------------------------------------------------
-# Helper Functions
+# Helper Functions & Demo Dataset Generator
 # ---------------------------------------------------------
 @st.cache_data
 def generate_demo_data():
     np.random.seed(42)
-    dates = pd.date_range(start="2026-01-01", periods=100, freq="D")
-    categories = ["Technology", "Healthcare", "Retail", "Finance"]
+    dates = pd.date_range(start="2026-01-01", periods=120, freq="D")
+    categories = ["Software", "Hardware", "Consulting", "Cloud Services", "Support"]
     regions = ["North America", "Europe", "Asia-Pacific", "Latin America"]
     
     return pd.DataFrame({
-        "Date": np.random.choice(dates, 300),
-        "Category": np.random.choice(categories, 300),
-        "Region": np.random.choice(regions, 300),
-        "Sales": np.random.uniform(100.0, 5000.0, 300).round(2),
-        "Units": np.random.randint(1, 50, 300),
-        "Profit_Margin": np.random.uniform(0.05, 0.45, 300).round(2)
+        "Date": np.random.choice(dates, 400),
+        "Category": np.random.choice(categories, 400),
+        "Region": np.random.choice(regions, 400),
+        "Revenue": np.random.uniform(200.0, 8000.0, 400).round(2),
+        "Units_Sold": np.random.randint(1, 60, 400),
+        "Satisfaction_Score": np.random.uniform(3.5, 5.0, 400).round(1)
     })
 
-def fig_to_bytes(fig):
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
-    buf.seek(0)
-    return buf
+# Plotly Transparent Dark Theme Template
+PLOTLY_THEME = {
+    "layout": {
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "font": {"color": "#cbd5e1", "family": "Inter, sans-serif"},
+        "xaxis": {"gridcolor": "#1e293b", "zerolinecolor": "#1e293b"},
+        "yaxis": {"gridcolor": "#1e293b", "zerolinecolor": "#1e293b"}
+    }
+}
 
 # ---------------------------------------------------------
-# Sidebar & Data Engine
+# Sidebar Engine & Dynamic Data Filtering
 # ---------------------------------------------------------
-st.sidebar.title("⚡ Control Center")
-if st.sidebar.button("🔒 Lock Application"):
+st.sidebar.markdown("""
+<div class="brand-logo-container" style="justify-content: flex-start; margin-bottom: 10px;">
+    <div class="brand-logo-icon" style="width:38px; height:38px; border-radius:12px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+    </div>
+    <div class="brand-logo-text" style="font-size: 1.4rem;">UNIVERSAL</div>
+</div>
+""", unsafe_allow_html=True)
+
+if st.sidebar.button("🔒 Lock Application", use_container_width=True):
     st.session_state["authenticated"] = False
     st.rerun()
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("📂 Data Source")
+st.sidebar.subheader("📂 1. Data Source")
 
-data_mode = st.sidebar.radio("Mode:", ["Upload CSV", "Demo Sample Data"])
+data_mode = st.sidebar.radio("Choose Input:", ["Upload Custom CSV", "Use Demo Dataset"])
 
-if data_mode == "Upload CSV":
-    file = st.sidebar.file_uploader("Drop CSV file here", type=["csv"])
-    if file is not None:
+if data_mode == "Upload Custom CSV":
+    uploaded_file = st.sidebar.file_uploader("Drop CSV file here", type=["csv"])
+    if uploaded_file is not None:
         try:
-            df = pd.read_csv(file)
+            df = pd.read_csv(uploaded_file)
             st.sidebar.success(f"Loaded: {len(df):,} rows")
         except Exception as e:
-            st.sidebar.error(f"File Error: {e}")
+            st.sidebar.error(f"Error loading file: {e}")
             df = generate_demo_data()
     else:
-        st.sidebar.info("Upload a file above or switch to Demo Mode.")
+        st.sidebar.info("Upload CSV above or view Demo Data.")
         df = generate_demo_data()
 else:
     df = generate_demo_data()
 
-# Auto-Detect Column Types
+# Column Auto-Detection Engine
 numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
 date_cols = []
 
-for c in df.columns:
-    if c not in numeric_cols:
+for col in df.columns:
+    if col not in numeric_cols:
         try:
-            converted = pd.to_datetime(df[c], errors='coerce')
+            converted = pd.to_datetime(df[col], errors='coerce')
             if converted.notna().sum() > 0.5 * len(df):
-                date_cols.append(c)
-                df[c] = converted
-                if c in categorical_cols:
-                    categorical_cols.remove(c)
+                date_cols.append(col)
+                df[col] = converted
+                if col in categorical_cols:
+                    categorical_cols.remove(col)
         except Exception:
             pass
 
+# Sidebar Interactive Filters
+st.sidebar.markdown("---")
+st.sidebar.subheader("🎛️ 2. Interactive Data Filters")
+
+filtered_df = df.copy()
+
+if categorical_cols:
+    filter_col = st.sidebar.selectbox("Filter By Category Column:", options=["None"] + categorical_cols)
+    if filter_col != "None":
+        selected_vals = st.sidebar.multiselect(
+            f"Select {filter_col} Values:",
+            options=list(df[filter_col].unique()),
+            default=list(df[filter_col].unique())[:3]
+        )
+        if selected_vals:
+            filtered_df = filtered_df[filtered_df[filter_col].isin(selected_vals)]
+
+if date_cols:
+    dt_col = date_cols[0]
+    min_date = filtered_df[dt_col].min().date()
+    max_date = filtered_df[dt_col].max().date()
+    date_range = st.sidebar.date_input("Date Range:", value=(min_date, max_date))
+    if len(date_range) == 2:
+        filtered_df = filtered_df[
+            (filtered_df[dt_col].dt.date >= date_range[0]) & 
+            (filtered_df[dt_col].dt.date <= date_range[1])
+        ]
+
 # ---------------------------------------------------------
-# Main Header & KPIs
+# Dashboard Main UI
 # ---------------------------------------------------------
 st.markdown('<div class="main-title">✨ Universal Business Analytics Studio</div>', unsafe_allow_html=True)
-st.markdown("Automated insights, visual analytics, and exportable data tables.")
+st.markdown("Interactive dashboards, multi-variable Plotly visualizations, and real-time filtering.")
+st.markdown("<br>", unsafe_allow_html=True)
 
-st.subheader("📌 Performance Overview")
+# Executive Insights Banner
+if numeric_cols and categorical_cols:
+    primary_num = numeric_cols[0]
+    primary_cat = categorical_cols[0]
+    top_group = filtered_df.groupby(primary_cat)[primary_num].sum().idxmax()
+    top_val = filtered_df.groupby(primary_cat)[primary_num].sum().max()
+    
+    st.markdown(f"""
+    <div class="insight-box">
+        💡 <b>Automated Insight:</b> The highest performing category in current filtered view is 
+        <span style="color:#c084fc; font-weight:bold;">{top_group}</span> with a total <b>{primary_num}</b> of 
+        <span style="color:#38bdf8; font-weight:bold;">{top_val:,.2f}</span> across <b>{len(filtered_df):,}</b> analyzed records.
+    </div>
+    """, unsafe_allow_html=True)
+
+# KPI Metric Cards
+st.subheader("📌 Key Metrics Overview")
 k1, k2, k3, k4 = st.columns(4)
 
 with k1:
-    st.markdown(f'<div class="metric-card"><div class="metric-label">Total Records</div><div class="metric-val">{len(df):,}</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-card"><div class="kpi-label">Active Records</div><div class="kpi-value">{len(filtered_df):,}</div></div>', unsafe_allow_html=True)
 
 with k2:
-    val = f"{df[numeric_cols[0]].sum():,.2f}" if numeric_cols else "N/A"
+    val = f"{filtered_df[numeric_cols[0]].sum():,.2f}" if numeric_cols else "N/A"
     lbl = numeric_cols[0] if numeric_cols else "Metric"
-    st.markdown(f'<div class="metric-card metric-card-2"><div class="metric-label">Total {lbl}</div><div class="metric-val">{val}</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-card kpi-card-2"><div class="kpi-label">Total {lbl}</div><div class="kpi-value">{val}</div></div>', unsafe_allow_html=True)
 
 with k3:
-    val = f"{df[numeric_cols[0]].mean():,.2f}" if numeric_cols else "N/A"
-    st.markdown(f'<div class="metric-card metric-card-3"><div class="metric-label">Average {lbl}</div><div class="metric-val">{val}</div></div>', unsafe_allow_html=True)
+    val = f"{filtered_df[numeric_cols[0]].mean():,.2f}" if numeric_cols else "N/A"
+    st.markdown(f'<div class="kpi-card kpi-card-3"><div class="kpi-label">Average {lbl}</div><div class="kpi-value">{val}</div></div>', unsafe_allow_html=True)
 
 with k4:
-    st.markdown(f'<div class="metric-card metric-card-4"><div class="metric-label">Attributes</div><div class="metric-val">{len(df.columns)} Columns</div></div>', unsafe_allow_html=True)
+    val = f"{filtered_df[numeric_cols[1]].sum():,.0f}" if len(numeric_cols) > 1 else f"{len(filtered_df.columns)} Cols"
+    lbl = numeric_cols[1] if len(numeric_cols) > 1 else "Attributes"
+    st.markdown(f'<div class="kpi-card kpi-card-4"><div class="kpi-label">{lbl}</div><div class="kpi-value">{val}</div></div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Visual Analytics (Interactive Native + Matplotlib Fallback)
+# Interactive Plotly Visualizations Studio
 # ---------------------------------------------------------
 st.subheader("📊 Interactive Visual Studio")
 
 if numeric_cols:
-    col_l, col_r = st.columns(2)
+    tab1, tab2, tab3 = st.tabs(["📊 Category Breakdown", "📈 Time Series & Distribution", "🔥 Correlation Heatmap"])
 
-    with col_l:
-        st.markdown("##### 🏷️ Category Aggregation")
-        cat_field = st.selectbox("Group By", options=categorical_cols if categorical_cols else df.columns)
-        num_field = st.selectbox("Metric", options=numeric_cols, key="num1")
+    # TAB 1: Category Bar & Donut Charts
+    with tab1:
+        c1, c2 = st.columns(2)
+        with c1:
+            cat_field = st.selectbox("Group Category By:", options=categorical_cols if categorical_cols else filtered_df.columns, key="p_cat")
+            num_field = st.selectbox("Aggregate Metric:", options=numeric_cols, key="p_num_1")
 
-        grouped = df.groupby(cat_field)[num_field].sum().reset_index().sort_values(by=num_field, ascending=False).head(10)
+            grouped = filtered_df.groupby(cat_field)[num_field].sum().reset_index().sort_values(by=num_field, ascending=False).head(10)
 
-        if HAS_PLOTTING_LIBS:
-            fig, ax = plt.subplots(figsize=(7, 4.2))
-            sns.barplot(data=grouped, x=num_field, y=cat_field, palette="Blues_r", ax=ax)
-            ax.set_title(f"Top {cat_field} by {num_field}", fontweight="bold")
-            st.pyplot(fig)
-            st.download_button("📷 Download PNG Chart", data=fig_to_bytes(fig), file_name="chart.png", mime="image/png")
+            fig_bar = px.bar(
+                grouped, x=num_field, y=cat_field, orientation='h',
+                color=num_field, color_continuous_scale="Purples",
+                title=f"Top 10 {cat_field} by {num_field}"
+            )
+            fig_bar.update_layout(PLOTLY_THEME["layout"], coloraxis_showscale=False)
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+        with c2:
+            fig_pie = px.pie(
+                grouped, names=cat_field, values=num_field, hole=0.5,
+                color_discrete_sequence=px.colors.qualitative.Pastel,
+                title=f"Proportion Share of {num_field}"
+            )
+            fig_pie.update_layout(PLOTLY_THEME["layout"])
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+    # TAB 2: Time Series & Distribution
+    with tab2:
+        c3, c4 = st.columns(2)
+        with c3:
+            dist_col = st.selectbox("Select Variable for Histogram:", options=numeric_cols, key="p_dist")
+            fig_hist = px.histogram(
+                filtered_df, x=dist_col, nbins=30, marging="rug" if len(filtered_df) < 1000 else None,
+                color_discrete_sequence=["#818cf8"], title=f"Distribution Frequency of {dist_col}"
+            )
+            fig_hist.update_layout(PLOTLY_THEME["layout"])
+            st.plotly_chart(fig_hist, use_container_width=True)
+
+        with c4:
+            if date_cols:
+                dt = date_cols[0]
+                ts_metric = st.selectbox("Trend Metric:", options=numeric_cols, key="p_ts")
+                ts_data = filtered_df.groupby(filtered_df[dt].dt.date)[ts_metric].sum().reset_index()
+                
+                fig_line = px.area(
+                    ts_data, x=dt, y=ts_metric,
+                    color_discrete_sequence=["#38bdf8"], title=f"Timeline Trend: {ts_metric}"
+                )
+                fig_line.update_layout(PLOTLY_THEME["layout"])
+                st.plotly_chart(fig_line, use_container_width=True)
+            else:
+                st.info("Upload data containing date columns to unlock automatic timeline trends.")
+
+    # TAB 3: Correlation Heatmap
+    with tab3:
+        if len(numeric_cols) > 1:
+            corr_matrix = filtered_df[numeric_cols].corr().round(2)
+            fig_corr = px.imshow(
+                corr_matrix, text_auto=True, color_continuous_scale="Plasma",
+                title="Numerical Correlation Matrix"
+            )
+            fig_corr.update_layout(PLOTLY_THEME["layout"])
+            st.plotly_chart(fig_corr, use_container_width=True)
         else:
-            st.bar_chart(grouped.set_index(cat_field))
-
-    with col_r:
-        st.markdown("##### 📈 Distribution Analysis")
-        dist_col = st.selectbox("Variable", options=numeric_cols, key="num2")
-
-        if HAS_PLOTTING_LIBS:
-            fig, ax = plt.subplots(figsize=(7, 4.2))
-            sns.histplot(df[dist_col].dropna(), kde=True, color="#2b5c8f", ax=ax)
-            ax.set_title(f"Distribution of {dist_col}", fontweight="bold")
-            st.pyplot(fig)
-        else:
-            st.line_chart(df[dist_col].value_counts().sort_index())
-
-    if date_cols:
-        st.markdown("---")
-        st.subheader("📅 Time Series Trends")
-        dt_col = date_cols[0]
-        ts_metric = st.selectbox("Select Trend Metric", options=numeric_cols, key="ts")
-        
-        ts_data = df.groupby(df[dt_col].dt.date)[ts_metric].sum()
-        st.line_chart(ts_data)
+            st.info("Correlation heatmaps require at least two numeric columns.")
 
 st.markdown("---")
 
 # ---------------------------------------------------------
-# Raw Data Explorer
+# Interactive Data Table Explorer & CSV Export
 # ---------------------------------------------------------
 st.subheader("📋 Dataset Explorer")
-st.dataframe(df, use_container_width=True)
 
-csv_export = df.to_csv(index=False).encode('utf-8')
+# Search Filter inside Data Table
+search_term = st.text_input("🔍 Search rows by keyword:", placeholder="Type to filter data records...")
+if search_term:
+    mask = filtered_df.astype(str).apply(lambda x: x.str.contains(search_term, case=False)).any(axis=1)
+    display_df = filtered_df[mask]
+else:
+    display_df = filtered_df
+
+st.dataframe(display_df, use_container_width=True)
+
+csv_export = display_df.to_csv(index=False).encode('utf-8')
 st.download_button(
-    label="💾 Export Processed CSV Data",
+    label="💾 Export Filtered CSV Data",
     data=csv_export,
-    file_name="processed_data.file.csv",
+    file_name="universal_analytics_export.csv",
     mime="text/csv"
 )
