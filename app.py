@@ -125,44 +125,50 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 # ---------------------------------------------------------
-# Security Lock Screen (Multi-User Credentials via Secrets)
+# Security Lock Screen (Password Authentication)
 # ---------------------------------------------------------
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
-if "user_id" not in st.session_state:
-    st.session_state["user_id"] = None
 
 if not st.session_state["authenticated"]:
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
+        
+        # Logo Header
         st.markdown("""
-        <div class="glass-card" style="text-align: center;">
-            <h3 style="margin-bottom: 8px; font-weight: 800;">🔒 Client Portal Login</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem;">Sign in with your assigned credentials.</p>
+        <div class="brand-logo-container">
+            <div class="brand-logo-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+            </div>
+            <div class="brand-logo-text">UNIVERSAL STUDIO</div>
         </div>
         """, unsafe_allow_html=True)
         
-        input_user = st.text_input("Username", placeholder="e.g. client_alpha", key="user_field")
-        input_pass = st.text_input("Password", type="password", placeholder="Enter password...", key="pwd_field")
+        # Glassmorphism Lock Card
+        st.markdown("""
+        <div class="glass-card" style="text-align: center;">
+            <h3 style="margin-bottom: 8px; font-weight: 800;">🔒 Enterprise License Lock</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem;">Enter your confidential password key to unlock the interactive studio.</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        if st.button("🚀 Unlock Studio", type="primary", use_container_width=True):
-            # Check user against secrets store
-            user_db = st.secrets.get("passwords", {})
-            
-            if input_user in user_db and user_db[input_user] == input_pass:
+        user_key = st.text_input("", type="password", placeholder="Enter license password...", key="pwd_field")
+        
+        if st.button("🚀 Unlock Interactive Studio", type="primary", use_container_width=True):
+            if user_key.strip() == "UNIVERSAL$12346":
                 st.session_state["authenticated"] = True
-                st.session_state["user_id"] = input_user
                 st.rerun()
             else:
-                st.error("❌ Invalid Username or Password.")
+                st.error("❌ Invalid License Key. Access Denied.")
                 
         st.markdown("<br><br>", unsafe_allow_html=True)
     st.stop()
-# ---------------------------------------------------------
+ # ---------------------------------------------------------
 # Helper Functions & Demo Dataset Generator
 # ---------------------------------------------------------
 @st.cache_data
