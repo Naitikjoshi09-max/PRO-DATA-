@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Inject script to override top-level browser tab title and favicon
+# Inject Custom PWA Metadata for Browser & Installed Device Icons
 components.html(
     """
     <script>
@@ -41,17 +41,42 @@ components.html(
     """,
     height=0,
 )
+
 # ---------------------------------------------------------
-# Modern CSS Styling & Hide Default Streamlit Branding
+# Modern CSS Styling & Sidebar Control Fix
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* Hide Streamlit Chrome Elements */
+    /* Hide top-right menu, deploy button, and footer only */
     #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
     footer {visibility: hidden;}
-    .stAppDeployButton {display:none;}
+    .stAppDeployButton {display: none !important;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    [data-testid="stDecoration"] {visibility: hidden !important;}
+    [data-testid="stStatusWidget"] {visibility: hidden !important;}
+
+    /* Keep header transparent so it doesn't block the UI */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
+    /* Force the Sidebar Collapse/Expand Button to remain visible and accessible */
+    [data-testid="stSidebarCollapsedControl"] {
+        visibility: visible !important;
+        display: flex !important;
+        color: #f8fafc !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 10px !important;
+        margin: 10px !important;
+        z-index: 999999 !important;
+    }
     
+    [data-testid="stSidebarCollapsedControl"]:hover {
+        background: rgba(168, 85, 247, 0.2) !important;
+        border-color: rgba(168, 85, 247, 0.5) !important;
+    }
+
     /* Dark Radial Gradient Background */
     .stApp {
         background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
@@ -152,7 +177,6 @@ if not st.session_state["authenticated"]:
     with col2:
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Display Uploaded Logo Image on Lock Screen
         try:
             c_logo1, c_logo2, c_logo3 = st.columns([1, 1.2, 1])
             with c_logo2:
