@@ -4,6 +4,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import io
+from sklearn.linear_model import LinearRegression
 
 # ---------------------------------------------------------
 # Page Configuration
@@ -125,6 +126,7 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
 # ---------------------------------------------------------
 # Security Lock Screen (Password Authentication)
 # ---------------------------------------------------------
@@ -168,7 +170,8 @@ if not st.session_state["authenticated"]:
                 
         st.markdown("<br><br>", unsafe_allow_html=True)
     st.stop()
- # ---------------------------------------------------------
+
+# ---------------------------------------------------------
 # Helper Functions & Demo Dataset Generator
 # ---------------------------------------------------------
 @st.cache_data
@@ -332,7 +335,12 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.subheader("📊 Interactive Visual Studio")
 
 if numeric_cols:
-    tab1, tab2, tab3 = st.tabs(["📊 Category Breakdown", "📈 Time Series & Distribution", "🔥 Correlation Heatmap"])
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📊 Category Breakdown", 
+        "📈 Time Series & Forecasting", 
+        "🔥 Correlation Heatmap", 
+        "🛠️ Custom Dynamic Builder"
+    ])
 
     # TAB 1: Category Bar & Donut Charts
     with tab1:
@@ -360,7 +368,7 @@ if numeric_cols:
             fig_pie.update_layout(PLOTLY_THEME["layout"])
             st.plotly_chart(fig_pie, use_container_width=True)
 
-    # TAB 2: Time Series & Distribution
+    # TAB 2: Time Series & Predictive Machine Learning Forecasting (ADDON 2)
     with tab2:
         c3, c4 = st.columns(2)
         with c3:
@@ -387,6 +395,47 @@ if numeric_cols:
             else:
                 st.info("Upload data containing date columns to unlock automatic timeline trends.")
 
+        # --- FEATURE 2: 30-Day Predictive Forecasting ---
+        if date_cols and numeric_cols:
+            st.markdown("---")
+            st.markdown("##### 🔮 30-Day Machine Learning Trend Projection")
+            dt_col = date_cols[0]
+            fc_metric = st.selectbox("Target Metric to Forecast:", options=numeric_cols, key="fc_select")
+            
+            ts_data_fc = filtered_df.groupby(filtered_df[dt_col].dt.date)[fc_metric].sum().reset_index().sort_values(by=dt_col)
+            ts_data_fc[dt_col] = pd.to_datetime(ts_data_fc[dt_col])
+            
+            if len(ts_data_fc) > 3:
+                ts_data_fc['Day_Index'] = np.arange(len(ts_data_fc))
+                
+                # Linear Regression Fit
+                X = ts_data_fc[['Day_Index']]
+                y = ts_data_fc[fc_metric]
+                model = LinearRegression().fit(X, y)
+                
+                # Predict Future 30 Days
+                future_days = 30
+                last_index = ts_data_fc['Day_Index'].max()
+                future_indices = np.arange(last_index + 1, last_index + 1 + future_days).reshape(-1, 1)
+                future_preds = model.predict(future_indices)
+                
+                last_date = ts_data_fc[dt_col].max()
+                future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=future_days)
+                
+                forecast_df = pd.DataFrame({dt_col: future_dates, fc_metric: future_preds, "Type": "30-Day Forecast"})
+                hist_df = ts_data_fc[[dt_col, fc_metric]].copy()
+                hist_df["Type"] = "Historical Data"
+                
+                combined_df = pd.concat([hist_df, forecast_df])
+                
+                fig_forecast = px.line(
+                    combined_df, x=dt_col, y=fc_metric, color="Type",
+                    color_discrete_map={"Historical Data": "#38bdf8", "30-Day Forecast": "#ec4899"},
+                    title=f"Projected 30-Day Trend Model for {fc_metric}"
+                )
+                fig_forecast.update_layout(PLOTLY_THEME["layout"])
+                st.plotly_chart(fig_forecast, use_container_width=True)
+
     # TAB 3: Correlation Heatmap
     with tab3:
         if len(numeric_cols) > 1:
@@ -400,12 +449,39 @@ if numeric_cols:
         else:
             st.info("Correlation heatmaps require at least two numeric columns.")
 
+    # TAB 4: Custom Interactive Chart Builder (ADDON 1)
+    with tab4:
+        st.markdown("##### 🛠️ Ad-Hoc Dynamic Chart Studio")
+        col_x, col_y, col_type = st.columns(3)
+        with col_x:
+            x_axis = st.selectbox("Select X-Axis Column:", options=filtered_df.columns, key="builder_x")
+        with col_y:
+            y_axis = st.selectbox("Select Y-Axis Metric:", options=numeric_cols, key="builder_y")
+        with col_type:
+            chart_style = st.selectbox("Select Chart Style:", ["Scatter Plot", "Bar Chart", "Line Trend", "Box Plot"], key="builder_style")
+
+        if chart_style == "Scatter Plot":
+            fig_custom = px.scatter(
+                filtered_df, x=x_axis, y=y_axis, 
+                color=categorical_cols[0] if categorical_cols else None, 
+                hover_data=filtered_df.columns
+            )
+        elif chart_style == "Bar Chart":
+            fig_custom = px.bar(filtered_df, x=x_axis, y=y_axis, color_discrete_sequence=["#a855f7"])
+        elif chart_style == "Line Trend":
+            fig_custom = px.line(filtered_df, x=x_axis, y=y_axis, color_discrete_sequence=["#38bdf8"])
+        else:
+            fig_custom = px.box(filtered_df, x=x_axis, y=y_axis, color_discrete_sequence=["#ec4899"])
+
+        fig_custom.update_layout(PLOTLY_THEME["layout"])
+        st.plotly_chart(fig_custom, use_container_width=True)
+
 st.markdown("---")
 
 # ---------------------------------------------------------
-# Interactive Data Table Explorer & CSV Export
+# Interactive Data Table Explorer & Multi-Format Export (ADDON 5)
 # ---------------------------------------------------------
-st.subheader("📋 Dataset Explorer")
+st.subheader("📋 Dataset Explorer & Multi-Format Reports")
 
 # Search Filter inside Data Table
 search_term = st.text_input("🔍 Search rows by keyword:", placeholder="Type to filter data records...")
@@ -417,10 +493,32 @@ else:
 
 st.dataframe(display_df, use_container_width=True)
 
+# Generate Multi-Tab Excel Workbook
+excel_buffer = io.BytesIO()
+with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+    display_df.to_excel(writer, sheet_name='Filtered Records', index=False)
+    if categorical_cols and numeric_cols:
+        summary_tb = display_df.groupby(categorical_cols[0])[numeric_cols[0]].agg(['sum', 'mean', 'count']).reset_index()
+        summary_tb.to_excel(writer, sheet_name='Category Summary', index=False)
+
 csv_export = display_df.to_csv(index=False).encode('utf-8')
-st.download_button(
-    label="💾 Export Filtered CSV Data",
-    data=csv_export,
-    file_name="universal_analytics_export.csv",
-    mime="text/csv"
-)
+
+col_exp1, col_exp2 = st.columns(2)
+
+with col_exp1:
+    st.download_button(
+        label="💾 Export Processed CSV Data",
+        data=csv_export,
+        file_name="universal_analytics_export.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
+with col_exp2:
+    st.download_button(
+        label="📊 Export Multi-Tab Excel Workbook (.xlsx)",
+        data=excel_buffer.getvalue(),
+        file_name="Executive_Analytics_Report.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True
+    )
