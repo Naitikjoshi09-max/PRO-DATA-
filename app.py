@@ -43,38 +43,21 @@ components.html(
 )
 
 # ---------------------------------------------------------
-# Modern CSS Styling & Sidebar Control Fix
+# Modern CSS Styling (Native Sidebar Controls Preserved)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* Hide top-right menu, deploy button, and footer only */
+    /* Hide top Streamlit menu, deploy button, and footer */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     .stAppDeployButton {display: none !important;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    [data-testid="stDecoration"] {visibility: hidden !important;}
-    [data-testid="stStatusWidget"] {visibility: hidden !important;}
+    [data-testid="stDecoration"] {display: none !important;}
+    [data-testid="stStatusWidget"] {display: none !important;}
 
-    /* Keep header transparent so it doesn't block the UI */
+    /* Keep header completely transparent so native sidebar controls (> / <) stay 100% visible & functional */
     header[data-testid="stHeader"] {
         background: transparent !important;
-    }
-
-    /* Force the Sidebar Collapse/Expand Button to remain visible and accessible */
-    [data-testid="stSidebarCollapsedControl"] {
-        visibility: visible !important;
-        display: flex !important;
-        color: #f8fafc !important;
-        background: rgba(255, 255, 255, 0.08) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 10px !important;
-        margin: 10px !important;
-        z-index: 999999 !important;
-    }
-    
-    [data-testid="stSidebarCollapsedControl"]:hover {
-        background: rgba(168, 85, 247, 0.2) !important;
-        border-color: rgba(168, 85, 247, 0.5) !important;
+        z-index: 99999 !important;
     }
 
     /* Dark Radial Gradient Background */
