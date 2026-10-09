@@ -126,11 +126,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-/* Hide Streamlit top header menu, status indicator, and footer */
-#MainMenu {visibility: hidden;}
-header {visibility: hidden;}
-footer {visibility: hidden;}
-.stAppDeployButton {display:none;}
 # ---------------------------------------------------------
 # Security Lock Screen (Password Authentication)
 # ---------------------------------------------------------
