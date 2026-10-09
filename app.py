@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -7,20 +8,60 @@ import io
 from sklearn.linear_model import LinearRegression
 
 # ---------------------------------------------------------
-# Page Configuration
+# Page Configuration & Logo
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Universal Analytics Studio Pro",
-    page_icon="⚡",
+    page_title="Universal Business Analytics Studio",
+    page_icon="logo.png",  # Uses logo.png from root folder
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# Inject Custom PWA Installation Icon & Title Metadata
+components.html(
+    """
+    <script>
+    const appName = "Universal Analytics Studio";
+    const logoUrl = "logo.png";
+
+    window.parent.document.title = appName;
+
+    let metaAppTitle = window.parent.document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!metaAppTitle) {
+        metaAppTitle = window.parent.document.createElement('meta');
+        metaAppTitle.name = 'apple-mobile-web-app-title';
+        window.parent.document.head.appendChild(metaAppTitle);
+    }
+    metaAppTitle.content = appName;
+
+    let appleTouchIcon = window.parent.document.querySelector('link[rel="apple-touch-icon"]');
+    if (!appleTouchIcon) {
+        appleTouchIcon = window.parent.document.createElement('link');
+        appleTouchIcon.rel = 'apple-touch-icon';
+        window.parent.document.head.appendChild(appleTouchIcon);
+    }
+    appleTouchIcon.href = logoUrl;
+
+    let faviconLink = window.parent.document.querySelector('link[rel="icon"]');
+    if (faviconLink) {
+        faviconLink.href = logoUrl;
+    }
+    </script>
+    """,
+    height=0,
+)
+
 # ---------------------------------------------------------
-# Ultra-Modern CSS & Glassmorphic Styling
+# Ultra-Modern CSS & Streamlit Branding Hide
 # ---------------------------------------------------------
 st.markdown("""
 <style>
+    /* Hide Streamlit Default UI Branding */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stAppDeployButton {display:none;}
+    
     /* Dark Gradient Base */
     .stApp {
         background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
@@ -67,7 +108,7 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* Interactive Metric KPI Cards with Hover Animation */
+    /* Interactive Metric KPI Cards */
     .kpi-card {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(12px);
@@ -107,7 +148,6 @@ st.markdown("""
         margin-top: 6px;
     }
     
-    /* Smart Insight Box */
     .insight-box {
         background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
         border: 1px solid rgba(168, 85, 247, 0.2);
@@ -116,7 +156,6 @@ st.markdown("""
         margin-bottom: 24px;
     }
     
-    /* Title Stylings */
     .main-title {
         font-size: 2.2rem;
         font-weight: 900;
@@ -126,6 +165,7 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
 # ---------------------------------------------------------
 # Security Lock Screen (Password Authentication)
 # ---------------------------------------------------------
@@ -138,7 +178,6 @@ if not st.session_state["authenticated"]:
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # Logo Header
         st.markdown("""
         <div class="brand-logo-container">
             <div class="brand-logo-icon">
@@ -150,7 +189,6 @@ if not st.session_state["authenticated"]:
         </div>
         """, unsafe_allow_html=True)
         
-        # Glassmorphism Lock Card
         st.markdown("""
         <div class="glass-card" style="text-align: center;">
             <h3 style="margin-bottom: 8px; font-weight: 800;">🔒 Enterprise License Lock</h3>
@@ -189,7 +227,6 @@ def generate_demo_data():
         "Satisfaction_Score": np.random.uniform(3.5, 5.0, 400).round(1)
     })
 
-# Plotly Transparent Dark Theme Template
 PLOTLY_THEME = {
     "layout": {
         "paper_bgcolor": "rgba(0,0,0,0)",
@@ -238,7 +275,6 @@ if data_mode == "Upload Custom CSV":
 else:
     df = generate_demo_data()
 
-# Column Auto-Detection Engine
 numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
 date_cols = []
@@ -255,7 +291,6 @@ for col in df.columns:
         except Exception:
             pass
 
-# Sidebar Interactive Filters
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎛️ 2. Interactive Data Filters")
 
@@ -290,7 +325,6 @@ st.markdown('<div class="main-title">✨ Universal Business Analytics Studio</di
 st.markdown("Interactive dashboards, multi-variable Plotly visualizations, and real-time filtering.")
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Executive Insights Banner
 if numeric_cols and categorical_cols:
     primary_num = numeric_cols[0]
     primary_cat = categorical_cols[0]
@@ -305,7 +339,6 @@ if numeric_cols and categorical_cols:
     </div>
     """, unsafe_allow_html=True)
 
-# KPI Metric Cards
 st.subheader("📌 Key Metrics Overview")
 k1, k2, k3, k4 = st.columns(4)
 
@@ -341,7 +374,6 @@ if numeric_cols:
         "🛠️ Custom Dynamic Builder"
     ])
 
-    # TAB 1: Category Bar & Donut Charts
     with tab1:
         c1, c2 = st.columns(2)
         with c1:
@@ -367,7 +399,6 @@ if numeric_cols:
             fig_pie.update_layout(PLOTLY_THEME["layout"])
             st.plotly_chart(fig_pie, use_container_width=True)
 
-    # TAB 2: Time Series & Predictive Machine Learning Forecasting (ADDON 2)
     with tab2:
         c3, c4 = st.columns(2)
         with c3:
@@ -394,7 +425,6 @@ if numeric_cols:
             else:
                 st.info("Upload data containing date columns to unlock automatic timeline trends.")
 
-        # --- FEATURE 2: 30-Day Predictive Forecasting ---
         if date_cols and numeric_cols:
             st.markdown("---")
             st.markdown("##### 🔮 30-Day Machine Learning Trend Projection")
@@ -407,12 +437,10 @@ if numeric_cols:
             if len(ts_data_fc) > 3:
                 ts_data_fc['Day_Index'] = np.arange(len(ts_data_fc))
                 
-                # Linear Regression Fit
                 X = ts_data_fc[['Day_Index']]
                 y = ts_data_fc[fc_metric]
                 model = LinearRegression().fit(X, y)
                 
-                # Predict Future 30 Days
                 future_days = 30
                 last_index = ts_data_fc['Day_Index'].max()
                 future_indices = np.arange(last_index + 1, last_index + 1 + future_days).reshape(-1, 1)
@@ -435,7 +463,6 @@ if numeric_cols:
                 fig_forecast.update_layout(PLOTLY_THEME["layout"])
                 st.plotly_chart(fig_forecast, use_container_width=True)
 
-    # TAB 3: Correlation Heatmap
     with tab3:
         if len(numeric_cols) > 1:
             corr_matrix = filtered_df[numeric_cols].corr().round(2)
@@ -448,7 +475,6 @@ if numeric_cols:
         else:
             st.info("Correlation heatmaps require at least two numeric columns.")
 
-    # TAB 4: Custom Interactive Chart Builder (ADDON 1)
     with tab4:
         st.markdown("##### 🛠️ Ad-Hoc Dynamic Chart Studio")
         col_x, col_y, col_type = st.columns(3)
@@ -478,11 +504,10 @@ if numeric_cols:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# Interactive Data Table Explorer & Multi-Format Export (ADDON 5)
+# Dataset Explorer & Multi-Format Export
 # ---------------------------------------------------------
 st.subheader("📋 Dataset Explorer & Multi-Format Reports")
 
-# Search Filter inside Data Table
 search_term = st.text_input("🔍 Search rows by keyword:", placeholder="Type to filter data records...")
 if search_term:
     mask = filtered_df.astype(str).apply(lambda x: x.str.contains(search_term, case=False)).any(axis=1)
@@ -492,7 +517,6 @@ else:
 
 st.dataframe(display_df, use_container_width=True)
 
-# Generate Multi-Tab Excel Workbook
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
     display_df.to_excel(writer, sheet_name='Filtered Records', index=False)
