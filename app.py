@@ -8,20 +8,20 @@ import io
 from sklearn.linear_model import LinearRegression
 
 # ---------------------------------------------------------
-# Page Configuration & Logo
+# Page Configuration & Custom Branding
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Universal Business Analytics Studio",
-    page_icon="logo.png",  # Uses logo.png from root folder
+    page_title="Apex Metrics Pro",
+    page_icon="logo.png",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Inject Custom PWA Installation Icon & Title Metadata
+# Inject Custom PWA Metadata for Browser & Installed Device Icons
 components.html(
     """
     <script>
-    const appName = "Universal Analytics Studio";
+    const appName = "Apex Metrics Pro";
     const logoUrl = "logo.png";
 
     window.parent.document.title = appName;
@@ -52,51 +52,35 @@ components.html(
 )
 
 # ---------------------------------------------------------
-# Ultra-Modern CSS & Streamlit Branding Hide
+# Modern CSS Styling & Hide Default Streamlit Branding
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* Hide Streamlit Default UI Branding */
+    /* Hide Streamlit Chrome Elements */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
     .stAppDeployButton {display:none;}
     
-    /* Dark Gradient Base */
+    /* Dark Radial Gradient Background */
     .stApp {
         background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
         color: #f8fafc;
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     
-    /* Branding Header */
-    .brand-logo-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        margin-bottom: 20px;
-    }
-    .brand-logo-icon {
-        width: 54px;
-        height: 54px;
-        background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
-    }
+    /* Brand Text Gradient */
     .brand-logo-text {
-        font-size: 2.3rem;
+        font-size: 2.1rem;
         font-weight: 900;
-        letter-spacing: -1px;
+        letter-spacing: -0.5px;
         background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        text-align: center;
     }
     
-    /* Glassmorphic Cards */
+    /* Glassmorphic Auth Cards */
     .glass-card {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(16px);
@@ -108,7 +92,7 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* Interactive Metric KPI Cards */
+    /* Hover-Animated KPI Cards */
     .kpi-card {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(12px);
@@ -176,29 +160,29 @@ if not st.session_state["authenticated"]:
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
         
-        st.markdown("""
-        <div class="brand-logo-container">
-            <div class="brand-logo-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-            </div>
-            <div class="brand-logo-text">UNIVERSAL STUDIO</div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Display Uploaded Logo Image on Lock Screen
+        try:
+            c_logo1, c_logo2, c_logo3 = st.columns([1, 1.2, 1])
+            with c_logo2:
+                st.image("logo.png", use_container_width=True)
+        except Exception:
+            pass
+            
+        st.markdown('<div class="brand-logo-text">APEX METRICS PRO</div>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
         
         st.markdown("""
         <div class="glass-card" style="text-align: center;">
-            <h3 style="margin-bottom: 8px; font-weight: 800;">🔒 Enterprise License Lock</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem;">Enter your confidential password key to unlock the interactive studio.</p>
+            <h3 style="margin-bottom: 8px; font-weight: 800;">🔒 Enterprise Portal Access</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem;">Enter your confidential access key to unlock the analytics platform.</p>
         </div>
         """, unsafe_allow_html=True)
         
         user_key = st.text_input("", type="password", placeholder="Enter license password...", key="pwd_field")
         
-        if st.button("🚀 Unlock Interactive Studio", type="primary", use_container_width=True):
+        if st.button("🚀 Unlock Apex Engine", type="primary", use_container_width=True):
             if user_key.strip() == "UNIVERSAL$12346":
                 st.session_state["authenticated"] = True
                 st.rerun()
@@ -238,18 +222,14 @@ PLOTLY_THEME = {
 }
 
 # ---------------------------------------------------------
-# Sidebar Engine & Dynamic Data Filtering
+# Sidebar Engine & Logo Display
 # ---------------------------------------------------------
-st.sidebar.markdown("""
-<div class="brand-logo-container" style="justify-content: flex-start; margin-bottom: 10px;">
-    <div class="brand-logo-icon" style="width:38px; height:38px; border-radius:12px;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-        </svg>
-    </div>
-    <div class="brand-logo-text" style="font-size: 1.4rem;">UNIVERSAL</div>
-</div>
-""", unsafe_allow_html=True)
+try:
+    st.sidebar.image("logo.png", width=140)
+except Exception:
+    pass
+
+st.sidebar.markdown('<div class="brand-logo-text" style="font-size: 1.3rem; text-align: left; margin-bottom: 12px;">APEX METRICS</div>', unsafe_allow_html=True)
 
 if st.sidebar.button("🔒 Lock Application", use_container_width=True):
     st.session_state["authenticated"] = False
@@ -321,8 +301,8 @@ if date_cols:
 # ---------------------------------------------------------
 # Dashboard Main UI
 # ---------------------------------------------------------
-st.markdown('<div class="main-title">✨ Universal Business Analytics Studio</div>', unsafe_allow_html=True)
-st.markdown("Interactive dashboards, multi-variable Plotly visualizations, and real-time filtering.")
+st.markdown('<div class="main-title">✨ Apex Metrics Pro Studio</div>', unsafe_allow_html=True)
+st.markdown("Enterprise business analytics, machine learning projections, and automated reporting.")
 st.markdown("<br>", unsafe_allow_html=True)
 
 if numeric_cols and categorical_cols:
@@ -504,7 +484,7 @@ if numeric_cols:
 st.markdown("---")
 
 # ---------------------------------------------------------
-# Dataset Explorer & Multi-Format Export
+# Dataset Explorer & Multi-Format Reports
 # ---------------------------------------------------------
 st.subheader("📋 Dataset Explorer & Multi-Format Reports")
 
@@ -532,7 +512,7 @@ with col_exp1:
     st.download_button(
         label="💾 Export Processed CSV Data",
         data=csv_export,
-        file_name="universal_analytics_export.csv",
+        file_name="apex_metrics_export.csv",
         mime="text/csv",
         use_container_width=True
     )
@@ -541,7 +521,7 @@ with col_exp2:
     st.download_button(
         label="📊 Export Multi-Tab Excel Workbook (.xlsx)",
         data=excel_buffer.getvalue(),
-        file_name="Executive_Analytics_Report.xlsx",
+        file_name="Apex_Metrics_Executive_Report.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )
