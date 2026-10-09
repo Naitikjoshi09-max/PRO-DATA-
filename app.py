@@ -5,52 +5,42 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import io
+from PIL import Image
 from sklearn.linear_model import LinearRegression
 
 # ---------------------------------------------------------
-# Page Configuration & Custom Branding
+# Page Configuration & Custom Logo Loading
 # ---------------------------------------------------------
+try:
+    logo_img = Image.open("logo.png")
+except Exception:
+    logo_img = "⚡"
+
 st.set_page_config(
     page_title="Apex Metrics Pro",
-    page_icon="logo.png",
+    page_icon=logo_img,
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Inject Custom PWA Metadata for Browser & Installed Device Icons
+# Inject script to override top-level browser tab title and favicon
 components.html(
     """
     <script>
-    const appName = "Apex Metrics Pro";
-    const logoUrl = "logo.png";
-
-    window.parent.document.title = appName;
-
-    let metaAppTitle = window.parent.document.querySelector('meta[name="apple-mobile-web-app-title"]');
-    if (!metaAppTitle) {
-        metaAppTitle = window.parent.document.createElement('meta');
-        metaAppTitle.name = 'apple-mobile-web-app-title';
-        window.parent.document.head.appendChild(metaAppTitle);
+    const topDoc = window.top.document;
+    topDoc.title = "Apex Metrics Pro";
+    
+    let faviconLink = topDoc.querySelector('link[rel*="icon"]');
+    if (!faviconLink) {
+        faviconLink = topDoc.createElement('link');
+        faviconLink.rel = 'icon';
+        topDoc.head.appendChild(faviconLink);
     }
-    metaAppTitle.content = appName;
-
-    let appleTouchIcon = window.parent.document.querySelector('link[rel="apple-touch-icon"]');
-    if (!appleTouchIcon) {
-        appleTouchIcon = window.parent.document.createElement('link');
-        appleTouchIcon.rel = 'apple-touch-icon';
-        window.parent.document.head.appendChild(appleTouchIcon);
-    }
-    appleTouchIcon.href = logoUrl;
-
-    let faviconLink = window.parent.document.querySelector('link[rel="icon"]');
-    if (faviconLink) {
-        faviconLink.href = logoUrl;
-    }
+    faviconLink.href = "logo.png";
     </script>
     """,
     height=0,
 )
-
 # ---------------------------------------------------------
 # Modern CSS Styling & Hide Default Streamlit Branding
 # ---------------------------------------------------------
